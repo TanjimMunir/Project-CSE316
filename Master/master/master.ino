@@ -15,14 +15,17 @@
 #include "nRF24L01.h"
 #include "RF24.h"
 
-char text[20];
+char text[30];
+char receiveText[30];
+uint8_t indx = 0;
 RF24 radio(7, 8); // CE, CSN
 const byte addresses[][6] = {"00001", "00002"};
 unsigned char data;
 unsigned char bdata;
+uint8_t av=1;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(4800);
   pinMode(0,INPUT);//RXD pin is set for INPUT
   pinMode(1,OUTPUT);
   radio.begin();
@@ -36,48 +39,56 @@ void loop() {
     {
       //Serial.println("here1");
       data= Serial.read();
+    }
+    
       if(data == 's')
       {
-        //Serial.println("here2");
+        Serial.println("here2");
         radio.stopListening();
         strcpy(text,"send");
         radio.write(&text, sizeof(text));
         while(1)
         {
-          delay(5);
+          
           radio.startListening();
 
-          if (radio.available()) {
-            Serial.println("here");
+          if (radio.available(&av)) {
             char tex[32] = "";
             radio.read(&tex, sizeof(tex));
-            Serial.println(tex);
-             if(strcmp(tex,"slave1 has sent")== 0)
-             {
-               Serial.write('1');
-             }
-             
-             if(strcmp(tex,"slave2 has sent")== 0)
-             {
-              Serial.write('2');
-             }
+            int n = sizeof(tex);
+            for(int l=0;l < n;l++)
+            { 
+                if(tex[l]=='h')
+                {
+                  break;
+                }
+                Serial.write(tex[l]);
+                delay(700);
+                if(tex[l]=='$'){break;}
+            }
+            tex[0]='\0';
           }
         
 
         if(Serial.available() > 0)
         {
           bdata = Serial.read();
+          
+              int asciiVal = (bdata)%125;
+              char asciiChar = asciiVal;
+              Serial.print(asciiChar);
+          
           if(bdata == 'b')
           {
-            Serial.println(bdata);
+            data = 'z';
             break;
           }
         }
       }
-      Serial.println("Came out");
+        Serial.println("Came out");
       }
      
-    }
+    
      
     
 

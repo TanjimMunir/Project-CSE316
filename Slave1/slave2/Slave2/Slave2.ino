@@ -13,6 +13,7 @@
 
 char text[30];
 uint8_t data;
+uint8_t strIndex = 0;
 RF24 radio(7, 8); // CE, CSN
 //const byte address[6] = "00001";
 const byte addresses[][6] = {"00001", "00002"};
@@ -29,7 +30,6 @@ void setup() {
 }
 void loop() {
   
-     delay(5);
      radio.startListening();
      if (radio.available()) {
          char tex[32] = "";
@@ -40,19 +40,19 @@ void loop() {
           Serial.write('s');
          }
        }
-         
+         //radio.stopListening();
          if(Serial.available() > 0)
          {
-          data= Serial.read();
-          Serial.println(data);
-          radio.stopListening();
-          if(data == 2)
-          {
-            strcpy(text,"slave2 has sent");
-          }
-          radio.write(&text, sizeof(text));
+            data = Serial.read();
+            //Serial.println((char)data);
+            radio.stopListening();
+            //radio.flush_tx();
+            text[strIndex] = data;
+            if(text[strIndex] == '$') {
+              text[strIndex + 1] = '\0';
+              radio.write(&text, sizeof(text));
+              strIndex =0;
+            }
+            else strIndex++;
          }
-        
-
-  
 }
